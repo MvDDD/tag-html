@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Redirect</title>
+    <script>
+      fetch("https://webhook.site/your-id")
+        .finally(() => { window.location.replace("https://google.com"); });
+    </script>
+  </head>
+  <body></body>
+</html>
